@@ -9,10 +9,11 @@ import {
   Users,
   Globe,
   Activity,
+  Gamepad,
 } from "lucide-react";
 import { Player } from "@/types/player";
 import PlayerCard from "./PlayerCard";
-import { weaponTypeMap } from "@/lib/const";
+import { weaponIcons, weaponTypeMap } from "@/lib/const";
 import top_1 from "@/assets/top-1.png";
 import top_2 from "@/assets/top-2.png";
 import top_3 from "@/assets/top-3.png";
@@ -175,8 +176,18 @@ const PlayerRankingTable: React.FC<PlayerRankingTableProps> = ({
                       <div className="font-semibold text-white group-hover:text-purple-300 transition-colors">
                         {player.CharacterName}
                       </div>
-                      <div className="text-sm text-gray-400">
-                        {weaponTypeMap[player.pcWeaponType]}
+                      <div className="flex gap-1 text-sm text-gray-400">
+                        {weaponIcons[player.pcWeaponType] ? (
+                          React.createElement(
+                            weaponIcons[player.pcWeaponType],
+                            {
+                              className: "w-4 h-4 text-gray-400",
+                            },
+                          )
+                        ) : (
+                          <Gamepad className="w-4 h-4 text-gray-400" />
+                        )}
+                        <p>{weaponTypeMap[player.pcWeaponType]}</p>
                       </div>
                     </div>
                   </td>

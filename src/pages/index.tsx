@@ -4,8 +4,10 @@ import PlayerRankingTable from "@/components/PlayerRankingTable";
 import SearchFilters from "@/components/SearchFilters";
 import { Player, ApiMetadata } from "@/types/player";
 import { apiService } from "@/services/api";
+import PasswordProtection from "@/components/PasswordProtection";
 
 const Index = () => {
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState(2020); // Default to ASIA II
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGuild, setSelectedGuild] = useState("");
@@ -94,6 +96,10 @@ const Index = () => {
         </div>
       </div>
     );
+  }
+
+  if (!isUnlocked) {
+    return <PasswordProtection onUnlock={() => setIsUnlocked(true)} />;
   }
 
   return (
