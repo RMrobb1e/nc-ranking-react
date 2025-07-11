@@ -1,0 +1,209 @@
+import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import PlayerRankingTable from "@/components/PlayerRankingTable";
+import SearchFilters from "@/components/SearchFilters";
+import { Player, ApiMetadata } from "@/types/player";
+import { apiService } from "@/services/api";
+
+const Index = () => {
+  const [selectedRegion, setSelectedRegion] = useState(2020); // Default to ASIA II
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedGuild, setSelectedGuild] = useState("");
+  const [selectedUnion, setSelectedUnion] = useState("");
+  const [selectedRealm, setSelectedRealm] = useState("");
+  const [sortBy, setSortBy] = useState<keyof Player>("rank");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Fetch metadata
+  const { data: metadata } = useQuery({
+    queryKey: ["metadata"],
+    queryFn: apiService.getMetadata,
+  });
+
+  // Fetch players data
+  const {
+    data: playersData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["players", selectedRegion],
+    queryFn: () => apiService.getGrowthTopPlayers(selectedRegion),
+    enabled: !!selectedRegion,
+  });
+
+  const players = useMemo(() => {
+    return playersData?.items || [];
+  }, [playersData]);
+
+  const filteredPlayers = useMemo(() => {
+    const filtered = players.filter((player) => {
+      const matchesSearch = player.CharacterName.toLowerCase().includes(
+        searchTerm.toLowerCase(),
+      );
+      const matchesGuild = !selectedGuild || player.GuildName === selectedGuild;
+      const matchesUnion =
+        !selectedUnion || player.GuildUnionName === selectedUnion;
+      const matchesRealm = !selectedRealm || player.RealmName === selectedRealm;
+
+      return matchesSearch && matchesGuild && matchesUnion && matchesRealm;
+    });
+
+    filtered.sort((a, b) => {
+      const aValue = a[sortBy];
+      const bValue = b[sortBy];
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+      }
+
+      const aStr = String(aValue).toLowerCase();
+      const bStr = String(bValue).toLowerCase();
+      return sortOrder === "asc"
+        ? aStr.localeCompare(bStr)
+        : bStr.localeCompare(aStr);
+    });
+
+    return filtered;
+  }, [
+    players,
+    searchTerm,
+    selectedGuild,
+    selectedUnion,
+    selectedRealm,
+    sortBy,
+    sortOrder,
+  ]);
+
+  const handleSort = (column: keyof Player) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h2 className="text-2xl font-bold mb-4">Error Loading Data</h2>
+          <p className="text-gray-400">
+            Failed to fetch player rankings. Please try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Header */}
+      <div className="bg-black/50 backdrop-blur-sm border-b border-purple-500/30">
+        <div className="container mx-auto px-6 py-8">
+          <div className="text-center">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-4">
+              Night Crows
+            </h1>
+            <h2 className="text-2xl text-purple-200 font-semibold mb-2">
+              Player Rankings
+            </h2>
+            <p className="text-gray-400">
+              Track the mightiest warriors across all realms
+            </p>
+            {metadata?.lastUpdated && (
+              <p className="text-gray-500 text-sm mt-2">
+                Last updated: {new Date(metadata.lastUpdated).toLocaleString()}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-6 py-8">
+        {/* Search and Filters */}
+        <SearchFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedGuild={selectedGuild}
+          setSelectedGuild={setSelectedGuild}
+          selectedUnion={selectedUnion}
+          setSelectedUnion={setSelectedUnion}
+          selectedRealm={selectedRealm}
+          setSelectedRealm={setSelectedRealm}
+          selectedRegion={selectedRegion}
+          setSelectedRegion={setSelectedRegion}
+          players={players}
+          regions={
+            metadata?.regions
+              .map((r) => {
+                if (r.code === 0) return;
+                return r;
+              })
+              .filter(Boolean) || []
+          }
+        />
+
+        {/* Stats Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-purple-800/30 to-purple-900/30 backdrop-blur-sm border border-purple-500/30 rounded-lg p-6">
+            <h3 className="text-purple-200 text-sm font-medium">
+              Total Players
+            </h3>
+            <p className="text-3xl font-bold text-white">
+              {isLoading
+                ? "..."
+                : (playersData?.totalUnique || 0).toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-blue-800/30 to-blue-900/30 backdrop-blur-sm border border-blue-500/30 rounded-lg p-6">
+            <h3 className="text-blue-200 text-sm font-medium">
+              Active Search Results
+            </h3>
+            <p className="text-3xl font-bold text-white">
+              {filteredPlayers.length.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-green-800/30 to-green-900/30 backdrop-blur-sm border border-green-500/30 rounded-lg p-6">
+            <h3 className="text-green-200 text-sm font-medium">Total Guilds</h3>
+            <p className="text-3xl font-bold text-white">
+              {new Set(players.map((p) => p.GuildName)).size}
+            </p>
+          </div>
+          <div className="bg-gradient-to-br from-orange-800/30 to-orange-900/30 backdrop-blur-sm border border-orange-500/30 rounded-lg p-6">
+            <h3 className="text-orange-200 text-sm font-medium">
+              Total Realms
+            </h3>
+            <p className="text-3xl font-bold text-white">
+              {
+                new Set(
+                  players.map((p) => [p.RealmGroupName, p.RealmName].join("/")),
+                ).size
+              }
+            </p>
+          </div>
+        </div>
+
+        {/* Player Rankings Table */}
+        {isLoading ? (
+          <div className="bg-gradient-to-r from-slate-800/50 to-purple-800/50 backdrop-blur-sm border border-purple-500/30 rounded-lg p-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
+              <p className="text-purple-200">Loading player rankings...</p>
+            </div>
+          </div>
+        ) : (
+          <PlayerRankingTable
+            players={filteredPlayers}
+            onSort={handleSort}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Index;
