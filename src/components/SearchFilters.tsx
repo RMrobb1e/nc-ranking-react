@@ -135,6 +135,139 @@ const SearchableSelect = ({
   );
 };
 
+const RealmSelect = ({
+  selectedRealm,
+  setSelectedRealm,
+  players,
+}: {
+  selectedRealm: string;
+  setSelectedRealm: (realm: string) => void;
+  players: Player[];
+}) => {
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const allRealmGroups = Array.from(
+    new Set(players.map((p) => p.RealmGroupName)),
+  );
+
+  const allRealmNames = Array.from(
+    new Set(players.map((p) => `${p.RealmGroupName}/${p.RealmName}`)),
+  );
+
+  const realmOptions = [...allRealmGroups, ...allRealmNames].sort();
+
+  const filteredOptions = realmOptions
+    .filter((option) => {
+      if (!searchTerm) return true;
+
+      const searchLower = searchTerm.toLowerCase();
+      const [realmGroup, realmName] = option.split("/");
+
+      // If search term matches the beginning of RealmGroupName (e.g., "SEA201" matches "SEA201/Knight")
+      // or if it's contained within RealmGroupName, RealmName, or the full string
+      return (
+        realmGroup.toLowerCase().startsWith(searchLower) ||
+        realmGroup.toLowerCase().includes(searchLower) ||
+        realmName?.toLowerCase().includes(searchLower) ||
+        option.toLowerCase().includes(searchLower)
+      );
+    })
+    .sort((a, b) => {
+      // Sort results to prioritize RealmGroupName matches at the beginning
+      const searchLower = searchTerm.toLowerCase();
+      const [aRealmGroup] = a.split("/");
+      const [bRealmGroup] = b.split("/");
+
+      const aStartsWith = aRealmGroup.toLowerCase().startsWith(searchLower);
+      const bStartsWith = bRealmGroup.toLowerCase().startsWith(searchLower);
+
+      if (aStartsWith && !bStartsWith) return -1;
+      if (!aStartsWith && bStartsWith) return 1;
+
+      return a.localeCompare(b);
+    });
+
+  const displayValue = selectedRealm || "All Realms";
+
+  return (
+    <div className="relative">
+      <Globe className="absolute left-3 top-3 w-4 h-4 text-green-400 z-10" />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between pl-10 bg-slate-700/50 border-slate-600 text-white hover:bg-slate-600/50"
+          >
+            {displayValue}
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0 bg-slate-800 border-slate-600">
+          <div className="p-2">
+            <Input
+              placeholder="Search realm (e.g., SEA201 to see all SEA201/* realms)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+            />
+          </div>
+          <div className="max-h-60 overflow-auto">
+            <div
+              className={cn(
+                "flex cursor-pointer items-center px-3 py-2 text-sm text-white hover:bg-slate-700",
+                !selectedRealm && "bg-slate-700",
+              )}
+              onClick={() => {
+                setSelectedRealm("");
+                setOpen(false);
+                setSearchTerm("");
+              }}
+            >
+              <Check
+                className={cn(
+                  "mr-2 h-4 w-4",
+                  !selectedRealm ? "opacity-100" : "opacity-0",
+                )}
+              />
+              All Realms
+            </div>
+            {filteredOptions.map((option) => (
+              <div
+                key={option}
+                className={cn(
+                  "flex cursor-pointer items-center px-3 py-2 text-sm text-white hover:bg-slate-700",
+                  selectedRealm === option && "bg-slate-700",
+                )}
+                onClick={() => {
+                  setSelectedRealm(option);
+                  setOpen(false);
+                  setSearchTerm("");
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    selectedRealm === option ? "opacity-100" : "opacity-0",
+                  )}
+                />
+                {option}
+              </div>
+            ))}
+            {filteredOptions.length === 0 && searchTerm && (
+              <div className="px-3 py-2 text-sm text-gray-400">
+                No realm found.
+              </div>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
+
 const RegionSelect = ({
   selectedRegion,
   setSelectedRegion,
@@ -214,9 +347,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   const unions = Array.from(
     new Set(players.map((p) => p.GuildUnionName)),
   ).sort();
-  const realms = Array.from(
-    new Set(players.map((p) => [p.RealmGroupName, p.RealmName].join("/"))),
-  ).sort();
 
   return (
     <div className="bg-gradient-to-r from-slate-800/50 to-purple-800/50 backdrop-blur-sm border border-purple-500/30 rounded-lg p-6 mb-8">
@@ -228,6 +358,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Region Filter */}
+        <RegionSelect
+          selectedRegion={selectedRegion}
+          setSelectedRegion={setSelectedRegion}
+          regions={regions}
+        />
+
         {/* Search by Name */}
         <div className="relative">
           <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
@@ -238,13 +375,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:border-purple-500"
           />
         </div>
-
-        {/* Region Filter */}
-        <RegionSelect
-          selectedRegion={selectedRegion}
-          setSelectedRegion={setSelectedRegion}
-          regions={regions}
-        />
 
         {/* Guild Filter */}
         <SearchableSelect
@@ -267,13 +397,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         />
 
         {/* Realm Filter */}
-        <SearchableSelect
-          value={selectedRealm}
-          onValueChange={setSelectedRealm}
-          options={realms}
-          placeholder="Realm"
-          icon={Globe}
-          iconColor="text-green-400"
+        <RealmSelect
+          selectedRealm={selectedRealm}
+          setSelectedRealm={setSelectedRealm}
+          players={players}
         />
       </div>
     </div>

@@ -45,7 +45,14 @@ const Index = () => {
       const matchesGuild = !selectedGuild || player.GuildName === selectedGuild;
       const matchesUnion =
         !selectedUnion || player.GuildUnionName === selectedUnion;
-      const matchesRealm = !selectedRealm || player.RealmName === selectedRealm;
+
+      // Updated realm filtering logic
+      const matchesRealm =
+        !selectedRealm ||
+        `${player.RealmGroupName}/${player.RealmName}` === selectedRealm ||
+        player.RealmGroupName.toLowerCase().includes(
+          selectedRealm.toLowerCase(),
+        );
 
       return matchesSearch && matchesGuild && matchesUnion && matchesRealm;
     });
@@ -184,7 +191,7 @@ const Index = () => {
             <p className="text-3xl font-bold text-white">
               {
                 new Set(
-                  players.map((p) => [p.RealmGroupName, p.RealmName].join("/")),
+                  players.map((p) => `${p.RealmGroupName}/${p.RealmName}`),
                 ).size
               }
             </p>
