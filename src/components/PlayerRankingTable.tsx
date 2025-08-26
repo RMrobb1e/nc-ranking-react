@@ -25,6 +25,7 @@ interface PlayerRankingTableProps {
   onSort: (column: keyof Player) => void;
   sortBy: keyof Player;
   sortOrder: "asc" | "desc";
+  showLinearRanking?: boolean;
 }
 
 const topImages = {
@@ -40,6 +41,7 @@ const PlayerRankingTable: React.FC<PlayerRankingTableProps> = ({
   onSort,
   sortBy,
   sortOrder,
+  showLinearRanking,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const playersPerPage = 50;
@@ -89,13 +91,27 @@ const PlayerRankingTable: React.FC<PlayerRankingTableProps> = ({
     return "text-red-400";
   };
 
+  const getDisplayRank = (player: Player, index: number) => {
+    if (showLinearRanking) {
+      // For pagination, calculate the linear rank based on current page
+      return startIndex + index + 1;
+    }
+    return player.rank;
+  };
+
   return (
     <div className="bg-gradient-to-br from-slate-800/30 to-purple-800/30 backdrop-blur-sm border border-purple-500/30 rounded-lg overflow-hidden">
       {/* Mobile Card View */}
       <div className="block lg:hidden">
         <div className="p-4 space-y-4">
-          {currentPlayers.map((player) => (
-            <PlayerCard key={player.CharacterName} player={player} />
+          {currentPlayers.map((player, index) => (
+            <PlayerCard
+              key={player.CharacterName}
+              player={{
+                ...player,
+                rank: getDisplayRank(player, index),
+              }}
+            />
           ))}
         </div>
       </div>
@@ -149,52 +165,56 @@ const PlayerRankingTable: React.FC<PlayerRankingTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
-              {currentPlayers.map((player, index) => (
-                <tr
-                  key={player.CharacterName}
-                  className="hover:bg-purple-900/20 transition-colors group"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      {player.rank <= 5 && (
-                        <img
-                          src={topImages[player.rank as keyof typeof topImages]}
-                          className={`w-8 h-8 ${getRankColor(player.rank)}`}
-                        />
-                      )}
-                      <span
-                        className={`text-lg font-bold ${getRankColor(
-                          player.rank,
-                        )}`}
-                      >
-                        #{player.rank}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="font-semibold text-white group-hover:text-purple-300 transition-colors">
-                        {player.CharacterName}
-                      </div>
-                      <div className="flex gap-1 text-sm text-gray-400">
-                        {weaponIcons[player.pcWeaponType] ? (
-                          React.createElement(
-                            weaponIcons[player.pcWeaponType],
-                            {
-                              className: "w-4 h-4 text-gray-400",
-                            },
-                          )
-                        ) : (
-                          <Gamepad className="w-4 h-4 text-gray-400" />
+              {currentPlayers.map((player, index) => {
+                const displayRank = getDisplayRank(player, index);
+                return (
+                  <tr
+                    key={player.CharacterName}
+                    className="hover:bg-purple-900/20 transition-colors group"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        {displayRank <= 5 && (
+                          <img
+                            src={
+                              topImages[displayRank as keyof typeof topImages]
+                            }
+                            className={`w-8 h-8 ${getRankColor(displayRank)}`}
+                          />
                         )}
-                        <p>{weaponTypeMap[player.pcWeaponType]}</p>
+                        <span
+                          className={`text-lg font-bold ${getRankColor(
+                            displayRank,
+                          )}`}
+                        >
+                          #{displayRank}
+                        </span>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-white font-medium">
-                    {player.score.toLocaleString()}
-                  </td>
-                  {/* <td className="px-6 py-4 text-white font-medium">
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <div className="font-semibold text-white group-hover:text-purple-300 transition-colors">
+                          {player.CharacterName}
+                        </div>
+                        <div className="flex gap-1 text-sm text-gray-400">
+                          {weaponIcons[player.pcWeaponType] ? (
+                            React.createElement(
+                              weaponIcons[player.pcWeaponType],
+                              {
+                                className: "w-4 h-4 text-gray-400",
+                              },
+                            )
+                          ) : (
+                            <Gamepad className="w-4 h-4 text-gray-400" />
+                          )}
+                          <p>{weaponTypeMap[player.pcWeaponType]}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-white font-medium">
+                      {player.score.toLocaleString()}
+                    </td>
+                    {/* <td className="px-6 py-4 text-white font-medium">
                     {player.score.toLocaleString()}
                   </td> 
                   <td className="px-6 py-4">
@@ -213,17 +233,18 @@ const PlayerRankingTable: React.FC<PlayerRankingTableProps> = ({
                       />
                     </div>
                   </td>*/}
-                  <td className="px-6 py-4 text-yellow-300 font-medium">
-                    {player.GuildName}
-                  </td>
-                  <td className="px-6 py-4 text-blue-300 font-medium">
-                    {player.GuildUnionName}
-                  </td>
-                  <td className="px-6 py-4 text-green-300 font-medium">
-                    {[player.RealmGroupName, player.RealmName].join("/")}
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-6 py-4 text-yellow-300 font-medium">
+                      {player.GuildName}
+                    </td>
+                    <td className="px-6 py-4 text-blue-300 font-medium">
+                      {player.GuildUnionName}
+                    </td>
+                    <td className="px-6 py-4 text-green-300 font-medium">
+                      {[player.RealmGroupName, player.RealmName].join("/")}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

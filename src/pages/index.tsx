@@ -4,6 +4,8 @@ import PlayerRankingTable from "@/components/PlayerRankingTable";
 import SearchFilters from "@/components/SearchFilters";
 import { Player, ApiMetadata } from "@/types/player";
 import { apiService } from "@/services/api";
+import { Button } from "@/components/ui/button";
+import { Trophy } from "lucide-react";
 import PasswordProtection from "@/components/PasswordProtection";
 
 const Index = () => {
@@ -15,6 +17,7 @@ const Index = () => {
   const [selectedRealm, setSelectedRealm] = useState("");
   const [sortBy, setSortBy] = useState<keyof Player>("rank");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [showTop20, setShowTop20] = useState(false);
 
   // Fetch metadata
   const { data: metadata } = useQuery({
@@ -38,7 +41,7 @@ const Index = () => {
   }, [playersData]);
 
   const filteredPlayers = useMemo(() => {
-    const filtered = players.filter((player) => {
+    let filtered = players.filter((player) => {
       const matchesSearch = player.CharacterName.toLowerCase().includes(
         searchTerm.toLowerCase(),
       );
@@ -72,9 +75,15 @@ const Index = () => {
         : bStr.localeCompare(aStr);
     });
 
+    // If showTop20 is true, limit to top 20 players
+    if (showTop20) {
+      filtered = filtered.slice(0, 20);
+    }
+
     return filtered;
   }, [
     players,
+    showTop20,
     searchTerm,
     selectedGuild,
     selectedUnion,
@@ -157,6 +166,21 @@ const Index = () => {
               .filter(Boolean) || []
           }
         />
+        {/* Top 20 Filter Button */}
+        <div className="mb-6">
+          <Button
+            onClick={() => setShowTop20(!showTop20)}
+            variant={showTop20 ? "default" : "outline"}
+            className={`${
+              showTop20
+                ? "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0"
+                : "bg-slate-700/50 border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10 hover:text-yellow-300"
+            } transition-all duration-200`}
+          >
+            <Trophy className="w-4 h-4 mr-2" />
+            {showTop20 ? "Show All Players" : "Show Top 20"}
+          </Button>
+        </div>
 
         {/* Stats Summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -212,6 +236,7 @@ const Index = () => {
             onSort={handleSort}
             sortBy={sortBy}
             sortOrder={sortOrder}
+            showLinearRanking={showTop20}
           />
         )}
       </div>
