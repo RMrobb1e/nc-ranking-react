@@ -1,11 +1,13 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PlayerRankingTable from "@/components/PlayerRankingTable";
 import SearchFilters from "@/components/SearchFilters";
 import { Player, ApiMetadata } from "@/types/player";
 import { apiService } from "@/services/api";
 import { Button } from "@/components/ui/button";
-import { Trophy } from "lucide-react";
+import { Trophy, Camera } from "lucide-react";
+import { toast } from "sonner";
+import html2canvas from "html2canvas";
 import PasswordProtection from "@/components/PasswordProtection";
 
 const Index = () => {
@@ -18,6 +20,7 @@ const Index = () => {
   const [sortBy, setSortBy] = useState<keyof Player>("rank");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [showTop20, setShowTop20] = useState(false);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   // Fetch metadata
   const { data: metadata } = useQuery({
@@ -101,6 +104,35 @@ const Index = () => {
     }
   };
 
+  const handleScreenshot = async () => {
+    if (!tableRef.current) {
+      toast.error("Table not found for screenshot");
+      return;
+    }
+
+    try {
+      toast.info("Capturing screenshot...");
+      const canvas = await html2canvas(tableRef.current, {
+        backgroundColor: "#1e293b",
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+      });
+
+      const link = document.createElement("a");
+      link.download = `night-crows-rankings-${
+        new Date().toISOString().split("T")[0]
+      }.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+
+      toast.success("Screenshot captured and downloaded!");
+    } catch (error) {
+      console.error("Screenshot failed:", error);
+      toast.error("Failed to capture screenshot");
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
@@ -166,8 +198,7 @@ const Index = () => {
               .filter(Boolean) || []
           }
         />
-        {/* Top 20 Filter Button */}
-        <div className="mb-6">
+        <div className="mb-6 flex gap-4">
           <Button
             onClick={() => setShowTop20(!showTop20)}
             variant={showTop20 ? "default" : "outline"}
@@ -179,6 +210,14 @@ const Index = () => {
           >
             <Trophy className="w-4 h-4 mr-2" />
             {showTop20 ? "Show All Players" : "Show Top 20"}
+          </Button>
+          <Button
+            onClick={handleScreenshot}
+            variant="outline"
+            className="bg-slate-700/50 border-purple-500/50 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300 transition-all duration-200"
+          >
+            <Camera className="w-4 h-4 mr-2" />
+            Take Screenshot
           </Button>
         </div>
 
@@ -231,13 +270,15 @@ const Index = () => {
             </div>
           </div>
         ) : (
-          <PlayerRankingTable
-            players={filteredPlayers}
-            onSort={handleSort}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            showLinearRanking={showTop20}
-          />
+          <div ref={tableRef}>
+            <PlayerRankingTable
+              players={filteredPlayers}
+              onSort={handleSort}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              showLinearRanking={showTop20}
+            />
+          </div>
         )}
       </div>
     </div>
