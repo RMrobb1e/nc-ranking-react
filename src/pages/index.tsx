@@ -273,9 +273,11 @@ const Index = () => {
                   ? (
                       filteredPlayers.reduce((sum, p) => sum + p.score, 0) /
                       filteredPlayers.length
-                    ).toFixed(2)
+                    ).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
                   : "0.00"}
-                %
               </p>
             </div>
           )}
