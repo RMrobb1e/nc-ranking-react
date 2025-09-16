@@ -222,7 +222,11 @@ const Index = () => {
         </div>
 
         {/* Stats Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div
+          className={`grid grid-cols-1 ${
+            showTop20 ? "md:grid-cols-5" : "md:grid-cols-4"
+          } gap-6 mb-8`}
+        >
           <div className="bg-gradient-to-br from-purple-800/30 to-purple-900/30 backdrop-blur-sm border border-purple-500/30 rounded-lg p-6">
             <h3 className="text-purple-200 text-sm font-medium">
               Total Players
@@ -259,6 +263,22 @@ const Index = () => {
               }
             </p>
           </div>
+          {showTop20 && (
+            <div className="bg-gradient-to-br from-yellow-800/30 to-yellow-900/30 backdrop-blur-sm border border-yellow-500/30 rounded-lg p-6">
+              <h3 className="text-yellow-200 text-sm font-medium">
+                Avg Growth Rate (Top 20)
+              </h3>
+              <p className="text-3xl font-bold text-white">
+                {filteredPlayers.length > 0
+                  ? (
+                      filteredPlayers.reduce((sum, p) => sum + p.score, 0) /
+                      filteredPlayers.length
+                    ).toFixed(2)
+                  : "0.00"}
+                %
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Player Rankings Table */}
