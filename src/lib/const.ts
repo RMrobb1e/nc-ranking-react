@@ -8,6 +8,7 @@ import {
   Utensils,
   Slice,
   Sword,
+  Orbit,
 } from "lucide-react";
 
 export const weaponTypeMap: { [key: number]: string } = {
@@ -21,6 +22,7 @@ export const weaponTypeMap: { [key: number]: string } = {
   14: "Spear",
   22: "Dagger",
   23: "Rapier",
+  33: "Orb",
 };
 
 export const weaponIcons: Record<string, React.ComponentType<any>> = {
@@ -33,4 +35,5 @@ export const weaponIcons: Record<string, React.ComponentType<any>> = {
   14: Utensils,
   22: Slice,
   23: Sword,
+  33: Orbit,
 };
