@@ -12,7 +12,7 @@ import PasswordProtection from "@/components/PasswordProtection";
 
 const Index = () => {
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState(2020); // Default to ASIA II
+  const [selectedRegion, setSelectedRegion] = useState(2010); // Default to ASIA I
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGuild, setSelectedGuild] = useState("");
   const [selectedUnion, setSelectedUnion] = useState("");
