@@ -141,12 +141,12 @@ const PlayerRankingTable: React.FC<PlayerRankingTableProps> = ({
                   <SortButton column="score" icon={Activity}>
                     Power
                   </SortButton>
-                </th>*/}
+                </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200">
                   <SortButton column="score" icon={TrendingUp}>
                     Growth Rate
                   </SortButton>
-                </th>
+                </th>*/}
                 <th className="px-6 py-4 text-left text-sm font-semibold text-purple-200">
                   <SortButton column="GuildName" icon={Crown}>
                     Guild
@@ -176,6 +176,7 @@ const PlayerRankingTable: React.FC<PlayerRankingTableProps> = ({
                       <div className="flex items-center gap-2">
                         {displayRank <= 5 && (
                           <img
+                            alt="Top Rank"
                             src={
                               topImages[displayRank as keyof typeof topImages]
                             }
@@ -211,10 +212,10 @@ const PlayerRankingTable: React.FC<PlayerRankingTableProps> = ({
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-white font-medium">
+                    {/*  <td className="px-6 py-4 text-white font-medium">
                       {player.score.toLocaleString()}
                     </td>
-                    {/* <td className="px-6 py-4 text-white font-medium">
+                   <td className="px-6 py-4 text-white font-medium">
                     {player.score.toLocaleString()}
                   </td> 
                   <td className="px-6 py-4">
